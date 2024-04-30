@@ -1,0 +1,263 @@
+{% extends 'common_files.html' %}
+
+{% block firstContent %}
+
+<div id="overlay">
+	<div class="cv-spinner">
+	  <span class="spinner"></span>
+	</div>
+  </div>
+
+	<div class="container">
+		<div class="row text-center mt-5">
+			<h1 class="text-white" style="font-weight: 700;">TodoApp</h1>
+
+		</div>	
+		
+		<div class="row mt-4 d-flex justify-content-center">
+			<div class="col-md-6">
+				<div class="card" style="background-color: unset;border: none;">
+				  <div class="card-header" style="background-color: unset;border: none;">
+			
+
+				  	<div class="error">
+				  		<div class="alert alert-danger alert-dismissible fade show">
+						    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+						    <strong>Error Occured!</strong> <span class="errorMsg"></span>
+						</div>
+				  	</div>
+
+					<div class="success">
+						<div class="alert alert-success alert-dismissible fade show">
+						  <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+						  <strong>Success!</strong> <span class="successMsg"></span>
+					  </div>
+					</div>
+
+
+
+					<!-- <form action="{% url 'addDataService' %}" method="POST">
+						<div class="input-group mb-3">
+							
+								{% csrf_token %}
+								<input type="text" name="title" required class="form-control title" placeholder="Enter Title" style=" border-radius: 7px!important;">
+								<button class="btn" type="submit" style="background-color: #4856f4;border:1px solid #4856f4;"><i class="fa-solid fa-plus text-white"></i></button>
+							
+						</div>
+					</form> -->
+					
+					<div class="input-group mb-3">
+							
+						{% csrf_token %}
+						<input type="text" name="title" required class="form-control title" placeholder="Enter Title" style=" border-radius: 7px!important;">
+						<button class="btn" type="button" id="addTitle" style="background-color: #4856f4;border:1px solid #4856f4;cursor: pointer;"><i class="fa-solid fa-plus text-white"></i></button>
+					
+				</div>
+				  </div>
+				  <div class="card-body">
+				  	<h5 class="text-center text-white" style="font-weight: 700;text-decoration: underline;">Todo List Box</h5>
+				  	<div>
+				  		<ol class="list-group" id="listBox">
+							<li class="list-group-item d-flex justify-content-between align-items-center shadow-lg mb-2 mt-2" style="background-color: #a25efc;border:unset;color:#fff;">
+							 	<div class="d-flex flex-column">
+							 		<span class="text-white">Inbox</span>
+							 		<span class="d-flex justify-content-between"><b>Created Date:- </b><p>23-Jul-2023</p></span>
+							 	</div>
+							 	<span class="btn rounded-pill shadow-lg" style="background-color: #ff0ad6;border: 1px solid #ff0ad6;"><i class="fa-solid fa-trash text-white"></i></span>
+							</li>
+
+							<li class="list-group-item d-flex justify-content-between align-items-center shadow-lg mb-2 mt-2 p-4" style="background-color: #d18c26d1;border:unset;color:#fff;">
+								<div class="d-flex flex-column">
+									<h6 class="text-white">No Records Existed</h6>
+								</div>
+						   </li>
+							  
+
+							  
+						</ol>
+				  	</div>
+				  </div>
+				</div>
+
+
+				
+			</div>
+
+		</div>
+	</div>
+	
+	
+
+{% endblock %}
+
+{% block jqueryScript %}
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
+<script type="text/javascript">
+
+	function fetchRecords()
+	{
+		$.ajax({
+					url:"{% url 'getRecords'%}",
+					headers: {
+					        'X-Requested-With': 'XMLHttpRequest',
+					},
+					beforeSend: function () {
+						$("#overlay").fadeIn(300);　
+					},
+					complete:function(){
+						$("#overlay").fadeOut(300);
+					},
+					method:'GET',
+					success:function (data) 
+					{
+						console.log(data['value']);	// body...
+						if(data['value'].length>0 && data.flag=='success')
+						{
+							var content='';
+							
+							data['value'].forEach(function(value, index) {
+										console.log("Index:", index, "Value:", value.id);
+										content +='<li class="list-group-item d-flex justify-content-between align-items-center shadow-lg mb-2 mt-2" style="background-color: #a25efc;border:unset;color:#fff;"> <div class="d-flex flex-column"> <span class="text-white">'+value.title+'</span> <span class="d-flex justify-content-between"><b>Created Date:- </b><p>'+value.created_date+'</p></span> </div> <span id="delBtn" class="btn rounded-pill shadow-lg" style="background-color: #ff0ad6;border: 1px solid #ff0ad6;cursor:pointer;" data-refId="'+value.id+'"><i class="fa-solid fa-trash text-white"></i></span> </li>';
+
+									});
+
+							$('#listBox').html(content);
+						}
+						else
+						{
+							var content='<li class="list-group-item d-flex justify-content-between align-items-center shadow-lg mb-2 mt-2 p-4" style="background-color: #d18c26d1;border:unset;color:#fff;"> <div class="d-flex flex-column"> <h6 class="text-white">No Records Existed</h6> </div> </li>';
+							$('#listBox').html(content);
+
+						}
+						
+
+
+					}
+				});
+	}
+
+	$(document).ready(function(){
+		var csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+		$('.error').hide();
+
+		$('.success').hide();
+
+		fetchRecords();
+
+
+		
+
+
+
+		$('#addTitle').click(function(e) {
+				
+			var title=$('.title').val();
+
+			if(title!='')
+			{
+				$('.error').hide();
+				$.ajax({
+					url:"{% url 'addDataService'%}",
+					data:{'title':title},
+					headers: {
+					        'X-Requested-With': 'XMLHttpRequest',
+					        'X-CSRFToken': csrftoken
+					},
+					beforeSend: function () {
+						$("#overlay").fadeIn(300);　
+					},
+					method:'POST',
+					success:function (data) 
+					{
+						console.log(data);
+						if(data.flag=='success')
+						{
+							fetchRecords();
+							$('.title').val('');
+						}
+						else
+						{
+
+							$('.errorMsg').html(data.message);
+							$('.error').show();
+							fetchRecords();
+							$('.title').val('');
+						}	// body...
+
+					},
+					complete:function(){
+						$("#overlay").fadeOut(300);
+					}
+				});
+			}
+			else
+			{
+				$('.errorMsg').html('Please Enter Some Text');
+				$('.error').show();
+				fetchRecords();
+				$('.title').val('');
+			}
+
+		});
+
+		$(document).on('click',"#delBtn",function(e) {
+				
+				var id=$(this).attr('data-refid');
+				var result = confirm("Are you sure you want to proceed?");
+
+				if(result)
+				{
+					$('.error').hide();
+					$.ajax({
+						url:"{% url 'deleteData'%}",
+						data:{'id':id},
+						headers: {
+								'X-Requested-With': 'XMLHttpRequest',
+								'X-CSRFToken': csrftoken
+						},
+						beforeSend: function () {
+							$("#overlay").fadeIn(300);　
+						},
+						method:'POST',
+						success:function (data) 
+						{
+							console.log(data);
+							if(data.flag=='success')
+							{
+								fetchRecords();
+							}
+							else
+							{
+	
+								$('.errorMsg').html(data.message);
+								$('.error').show();
+								fetchRecords();
+							}	// body...
+	
+						},
+						complete:function(){
+							$("#overlay").fadeOut(300);
+						}
+					});
+				}
+				else
+				{
+					$('.errorMsg').html('Please Select Some Deleted');
+					$('.error').show();
+					fetchRecords();
+					$('.title').val('');
+				}
+	
+			});
+
+
+
+
+
+	});
+
+</script>
+{% endblock %}
+
